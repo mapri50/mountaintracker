@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Condition {
+  WINTER
+  SOMMER
+  UEBERGANG
+}
+
+enum Activity {
+  SPORTKLETTERN
+  ALPINKLETTERN
+  SPORTKLETTERSTEIG
+  HOCHTOUR
+  EIS_MIXEDKLETTERN
+  WANDERN
+  BERGTOUR
+  SKITOUR
+  SKIHOCHTOUR
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tours     Tour[]
+  ascents   Ascent[]
+}
+
+model Tour {
+  id          String  @id @default(cuid())
+  name        String
+  description String? @db.Text
+  sourceUrl   String?
+  location    String?
+
+  // Categories
+  conditions Condition[]
+  activity   Activity
+
+  // Tour details
+  elevation  Int? // meters
+  distance   Int? // meters
+  duration   Int? // minutes
+  difficulty String?
+  grade      String?
+
+  // Metadata
+  imageUrl String?
+  gpxData  String? @db.Text
+
+  // Notes
+  notes String? @db.Text
+
+  // Relations
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ascents Ascent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([activity])
+}
+
+model Ascent {
+  id     String   @id @default(cuid())
+  date   DateTime
+  notes  String?  @db.Text
+  tourId String
+  tour   Tour     @relation(fields: [tourId], references: [id], onDelete: Cascade)
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tourId])
+  @@index([userId])
+  @@index([date])
+}

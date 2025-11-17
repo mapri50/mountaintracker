@@ -2,7 +2,7 @@
 
 ## Overview
 
-A complete Next.js 14 application for tracking mountain tours with web scraping capabilities, authentication, and beautiful UI.
+A complete Nextjs 14 application for tracking mountain tours with web scraping capabilities, authentication, and beautiful UI.
 
 ## ✅ Completed Features
 

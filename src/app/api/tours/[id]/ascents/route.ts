@@ -79,6 +79,14 @@ export async function POST(
       return NextResponse.json({ error: "Tour not found" }, { status: 404 });
     }
 
+    // Calculate duration if start and end times provided
+    let duration: number | null = null;
+    if (validation.data.startTime && validation.data.endTime) {
+      const start = new Date(validation.data.startTime);
+      const end = new Date(validation.data.endTime);
+      duration = Math.floor((end.getTime() - start.getTime()) / 1000); // Duration in seconds
+    }
+
     const ascent = await prisma.ascent.create({
       data: {
         date: new Date(validation.data.date),
@@ -92,6 +100,13 @@ export async function POST(
         partners: validation.data.partners || [],
         conditions: validation.data.conditions,
         weather: validation.data.weather,
+        // Use tour values as defaults when no GPX file is uploaded
+        distance: tour.distance,
+        elevationGain: tour.elevationGain,
+        elevationLoss: tour.elevationLoss,
+        maxElevation: tour.maxElevation,
+        minElevation: tour.minElevation,
+        duration: duration,
         tourId: params.id,
         userId: session.user.id,
       },

@@ -1,7 +1,0 @@
-# Build
-npm run build
-
-# Output configuration for Vercel
-[build]
-  command = "npm run build"
-  publish = ".next"

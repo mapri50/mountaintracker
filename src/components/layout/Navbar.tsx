@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Mountain, Plus, LogOut } from "lucide-react";
+import { Mountain, Plus, LogOut, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export function Navbar() {
@@ -25,6 +25,12 @@ export function Navbar() {
               <span className="text-sm text-mountain-600">
                 Welcome, {session.user.username}
               </span>
+              <Link href="/stats">
+                <Button size="sm" variant="ghost">
+                  <BarChart3 className="w-4 h-4 mr-1" />
+                  Stats
+                </Button>
+              </Link>
               <Link href="/tours/new">
                 <Button size="sm">
                   <Plus className="w-4 h-4 mr-1" />

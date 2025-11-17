@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Tour } from "@prisma/client";
 import { TourForm } from "@/components/tours/TourForm";
+import { AscentForm } from "@/components/tours/AscentForm";
 import { TourFormData } from "@/lib/validations";
 import {
   Card,
@@ -62,10 +63,6 @@ export default function TourDetailPage({ params }: { params: { id: string } }) {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAscentForm, setShowAscentForm] = useState(false);
-  const [ascentDate, setAscentDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [ascentNotes, setAscentNotes] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -156,33 +153,9 @@ export default function TourDetailPage({ params }: { params: { id: string } }) {
     setShowAscentForm(!showAscentForm);
   };
 
-  const handleAddAscent = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const response = await fetch(`/api/tours/${params.id}/ascents`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          date: new Date(ascentDate).toISOString(),
-          notes: ascentNotes || undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add ascent");
-      }
-
-      await fetchAscents();
-      setShowAscentForm(false);
-      setAscentDate(new Date().toISOString().split("T")[0]);
-      setAscentNotes("");
-    } catch (error) {
-      console.error("Error adding ascent:", error);
-      alert("Failed to add ascent. Please try again.");
-    }
+  const handleAscentSuccess = async () => {
+    await fetchAscents();
+    setShowAscentForm(false);
   };
 
   const handleDeleteAscent = async (ascentId: string) => {
@@ -413,45 +386,11 @@ export default function TourDetailPage({ params }: { params: { id: string } }) {
               <h3 className="text-lg font-semibold text-mountain-800 mb-4">
                 Add New Ascent
               </h3>
-              <form onSubmit={handleAddAscent} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-mountain-700 mb-1">
-                    Date
-                  </label>
-                  <Input
-                    type="date"
-                    value={ascentDate}
-                    onChange={(e) => setAscentDate(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-mountain-700 mb-1">
-                    Notes (optional)
-                  </label>
-                  <Textarea
-                    value={ascentNotes}
-                    onChange={(e) => setAscentNotes(e.target.value)}
-                    placeholder="How was the tour? Weather, conditions, etc."
-                    rows={3}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" variant="primary" size="sm">
-                    <CheckCircle2 className="w-4 h-4 mr-1" />
-                    Save Ascent
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowAscentForm(false)}
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Cancel
-                  </Button>
-                </div>
-              </form>
+              <AscentForm
+                tourId={params.id}
+                onSuccess={handleAscentSuccess}
+                onCancel={() => setShowAscentForm(false)}
+              />
             </div>
           )}
 

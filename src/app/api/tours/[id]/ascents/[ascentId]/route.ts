@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { updateUserStats } from "@/lib/stats";
 
 const ascentSchema = z.object({
   date: z.string().datetime(),
@@ -51,6 +52,9 @@ export async function PATCH(
       },
     });
 
+    // Update user stats
+    await updateUserStats(session.user.id);
+
     return NextResponse.json(updatedAscent);
   } catch (error) {
     console.error("Error updating ascent:", error);
@@ -86,6 +90,9 @@ export async function DELETE(
     await prisma.ascent.delete({
       where: { id: params.ascentId },
     });
+
+    // Update user stats after deletion
+    await updateUserStats(session.user.id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

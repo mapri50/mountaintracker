@@ -89,8 +89,8 @@ export default function LoginPage() {
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
 
-            <p className="text-center text-sm text-mountain-600">
-              Don't have an account?{" "}
+            <p className="mt-6 text-center text-sm text-mountain-600">
+              Don&apos;t have an account?{" "}
               <Link
                 href="/auth/register"
                 className="text-primary-600 hover:text-primary-700 font-medium"

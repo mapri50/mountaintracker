@@ -45,3 +45,7 @@ next-env.d.ts
 
 # prisma
 prisma/migrations
+
+# uploads
+/public/uploads/**
+!/public/uploads/README.md

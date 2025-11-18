@@ -61,6 +61,9 @@ model Tour {
   // Notes
   notes String? @db.Text
 
+  // Irrelevant flag
+  irrelevant Boolean @default(false)
+
   // Relations
   userId  String
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)

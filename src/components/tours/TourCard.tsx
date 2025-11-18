@@ -20,19 +20,64 @@ import {
   Clock,
   TrendingUp,
   CheckCircle2,
+  EyeOff,
+  Eye,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 interface TourCardProps {
-  tour: Tour;
+  tour: Tour & { ascentCount?: number };
   ascentCount?: number;
+  onIrrelevantToggle?: (tourId: string, irrelevant: boolean) => void;
 }
 
-export function TourCard({ tour, ascentCount = 0 }: TourCardProps) {
+export function TourCard({
+  tour,
+  ascentCount = 0,
+  onIrrelevantToggle,
+}: TourCardProps) {
+  const [isToggling, setIsToggling] = useState(false);
+
+  const handleIrrelevantToggle = async (
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    setIsToggling(true);
+    try {
+      const response = await fetch(`/api/tours/${tour.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          irrelevant: !tour.irrelevant,
+        }),
+      });
+
+      if (response.ok) {
+        if (onIrrelevantToggle) {
+          onIrrelevantToggle(tour.id, !tour.irrelevant);
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling irrelevant status:", error);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   return (
     <Link href={`/tours/${tour.id}`} className="block no-underline">
-      <Card className="h-full flex flex-col hover:shadow-lg transition-shadow">
+      <Card
+        className={cn(
+          "h-full flex flex-col hover:shadow-lg transition-shadow",
+          tour.irrelevant && "opacity-60"
+        )}
+      >
         {tour.imageUrl && (
           <div className="relative h-48 w-full">
             <Image
@@ -46,6 +91,45 @@ export function TourCard({ tour, ascentCount = 0 }: TourCardProps) {
                 {ascentCount} {ascentCount === 1 ? "ascent" : "ascents"}
               </div>
             )}
+            <button
+              onClick={handleIrrelevantToggle}
+              disabled={isToggling}
+              className={cn(
+                "absolute top-2 left-2 bg-white/90 hover:bg-white rounded-full p-2 transition-colors",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+              title={
+                tour.irrelevant ? "Mark as relevant" : "Mark as irrelevant"
+              }
+            >
+              {tour.irrelevant ? (
+                <Eye className="w-4 h-4 text-mountain-700" />
+              ) : (
+                <EyeOff className="w-4 h-4 text-mountain-700" />
+              )}
+            </button>
+          </div>
+        )}
+
+        {!tour.imageUrl && (
+          <div className="relative">
+            <button
+              onClick={handleIrrelevantToggle}
+              disabled={isToggling}
+              className={cn(
+                "absolute top-2 right-2 bg-white hover:bg-gray-50 rounded-full p-2 transition-colors",
+                "border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
+              title={
+                tour.irrelevant ? "Mark as relevant" : "Mark as irrelevant"
+              }
+            >
+              {tour.irrelevant ? (
+                <Eye className="w-4 h-4 text-mountain-700" />
+              ) : (
+                <EyeOff className="w-4 h-4 text-mountain-700" />
+              )}
+            </button>
           </div>
         )}
 

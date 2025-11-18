@@ -70,7 +70,10 @@ export async function PATCH(
 
     const updatedTour = await prisma.tour.update({
       where: { id: params.id },
-      data: validation.data,
+      data: {
+        ...validation.data,
+        irrelevant: validation.data.irrelevant ?? tour.irrelevant,
+      },
     });
 
     return NextResponse.json(updatedTour);

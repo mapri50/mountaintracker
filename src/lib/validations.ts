@@ -26,6 +26,7 @@ export const tourSchema = z.object({
   grade: z.string().optional(),
   imageUrl: z.string().url().optional().or(z.literal("")),
   notes: z.string().optional(),
+  irrelevant: z.boolean().optional(),
 });
 
 export type TourFormData = z.infer<typeof tourSchema>;

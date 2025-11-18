@@ -183,6 +183,23 @@ export function AscentForm({ tourId, onSuccess, onCancel }: AscentFormProps) {
             />
           </div>
         </div>
+        {startTime && endTime && (
+          <div className="text-sm text-mountain-600 mt-2">
+            Duration:{" "}
+            {(() => {
+              const start = new Date(`2000-01-01T${startTime}`);
+              const end = new Date(`2000-01-01T${endTime}`);
+              const minutes = Math.round(
+                (end.getTime() - start.getTime()) / 60000
+              );
+              const hours = Math.floor(minutes / 60);
+              const mins = minutes % 60;
+              return minutes > 0
+                ? `${hours}h ${mins}m (${minutes} minutes)`
+                : "Invalid time range";
+            })()}
+          </div>
+        )}
       </div>
 
       <div>

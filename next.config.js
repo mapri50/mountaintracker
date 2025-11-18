@@ -14,7 +14,16 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["www.bergsteigen.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "**",
+      },
+    ],
   },
 };
 

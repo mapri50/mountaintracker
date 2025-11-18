@@ -86,7 +86,10 @@ export async function POST(
     const end = validation.data.endTime
       ? new Date(validation.data.endTime)
       : null;
-    const duration = start && end ? end.getTime() - start.getTime() : null;
+    const duration =
+      start && end
+        ? Math.round((end.getTime() - start.getTime()) / 60000)
+        : null;
 
     const ascent = await prisma.ascent.create({
       data: {

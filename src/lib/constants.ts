@@ -19,9 +19,9 @@ export const ACTIVITY_LABELS: Record<Activity, string> = {
 };
 
 export const CONDITION_COLORS: Record<Condition, string> = {
-  WINTER: "text-primary-600 border-primary-600",
-  SOMMER: "text-primary-600 border-primary-600",
-  UEBERGANG: "text-primary-600 border-primary-600",
+  WINTER: "text-blue-600 border-blue-600",
+  SOMMER: "text-green-600 border-green-600",
+  UEBERGANG: "text-yellow-600 border-yellow-600",
 };
 
 export const ACTIVITY_COLORS: Record<Activity, string> = {

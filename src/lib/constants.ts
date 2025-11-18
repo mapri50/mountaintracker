@@ -19,9 +19,9 @@ export const ACTIVITY_LABELS: Record<Activity, string> = {
 };
 
 export const CONDITION_COLORS: Record<Condition, string> = {
-  WINTER: "text-white border-blue-200",
-  SOMMER: "text-white border-green-200",
-  UEBERGANG: "text-white border-yellow-200",
+  WINTER: "text-primary-600 border-primary-600",
+  SOMMER: "text-primary-600 border-primary-600",
+  UEBERGANG: "text-primary-600 border-primary-600",
 };
 
 export const ACTIVITY_COLORS: Record<Activity, string> = {
@@ -38,9 +38,9 @@ export const ACTIVITY_COLORS: Record<Activity, string> = {
 
 export const CONDITION_STYLES: Record<Condition, { backgroundColor: string }> =
   {
-    WINTER: { backgroundColor: "#3b82f6" },
-    SOMMER: { backgroundColor: "#22c55e" },
-    UEBERGANG: { backgroundColor: "#eab308" },
+    WINTER: { backgroundColor: "transparent" },
+    SOMMER: { backgroundColor: "transparent" },
+    UEBERGANG: { backgroundColor: "transparent" },
   };
 
 export const ACTIVITY_STYLES: Record<Activity, { backgroundColor: string }> = {

@@ -208,10 +208,10 @@ export default function TourDetailPage({ params }: { params: { id: string } }) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-5xl mx-auto px-2 sm:px-4 lg:px-8 py-4 sm:py-8">
       <Card>
         {tour.imageUrl && (
-          <div className="relative h-96 w-full">
+          <div className="relative h-48 sm:h-64 md:h-96 w-full">
             <Image
               src={tour.imageUrl}
               alt={tour.name}
@@ -222,9 +222,9 @@ export default function TourDetailPage({ params }: { params: { id: string } }) {
         )}
 
         <CardHeader>
-          <div className="flex justify-between items-start gap-4">
+          <div className="flex flex-col gap-4">
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-mountain-900 mb-3">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-mountain-900 mb-3">
                 {tour.name}
               </h1>
               <div className="flex flex-wrap gap-2">
@@ -232,7 +232,7 @@ export default function TourDetailPage({ params }: { params: { id: string } }) {
                   <span
                     key={condition}
                     className={cn(
-                      "px-3 py-1 rounded-md text-sm font-medium border",
+                      "px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium border",
                       CONDITION_COLORS[condition]
                     )}
                     style={CONDITION_STYLES[condition]}
@@ -242,7 +242,7 @@ export default function TourDetailPage({ params }: { params: { id: string } }) {
                 ))}
                 <span
                   className={cn(
-                    "px-3 py-1 rounded-md text-sm font-medium border",
+                    "px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm font-medium border",
                     ACTIVITY_COLORS[tour.activity]
                   )}
                   style={ACTIVITY_STYLES[tour.activity]}
@@ -251,29 +251,34 @@ export default function TourDetailPage({ params }: { params: { id: string } }) {
                 </span>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="primary"
                 size="sm"
                 onClick={handleToggleCompleted}
+                className="flex-1 sm:flex-none"
               >
-                <Plus className="w-4 h-4 mr-1" />
-                Add Ascent
+                <Plus className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Add Ascent</span>
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsEditing(true)}
+                className="flex-1 sm:flex-none"
               >
-                <Edit2 className="w-4 h-4" />
+                <Edit2 className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Edit</span>
               </Button>
               <Button
                 variant="danger"
                 size="sm"
                 onClick={handleDelete}
                 disabled={isDeleting}
+                className="flex-1 sm:flex-none"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4 sm:mr-1" />
+                <span className="hidden sm:inline">Delete</span>
               </Button>
             </div>
           </div>
@@ -287,49 +292,55 @@ export default function TourDetailPage({ params }: { params: { id: string } }) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {tour.elevation && (
-              <div className="bg-mountain-50 p-4 rounded-lg">
+              <div className="bg-mountain-50 p-3 sm:p-4 rounded-lg">
                 <div className="flex items-center gap-2 text-mountain-600 mb-1">
-                  <TrendingUp className="w-5 h-5" />
-                  <span className="text-sm font-medium">Elevation</span>
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-xs sm:text-sm font-medium">
+                    Elevation
+                  </span>
                 </div>
-                <p className="text-xl font-bold text-mountain-900">
+                <p className="text-lg sm:text-xl font-bold text-mountain-900">
                   {formatElevation(tour.elevation)}
                 </p>
               </div>
             )}
 
             {tour.distance && (
-              <div className="bg-mountain-50 p-4 rounded-lg">
+              <div className="bg-mountain-50 p-3 sm:p-4 rounded-lg">
                 <div className="flex items-center gap-2 text-mountain-600 mb-1">
-                  <Mountain className="w-5 h-5" />
-                  <span className="text-sm font-medium">Distance</span>
+                  <Mountain className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-xs sm:text-sm font-medium">
+                    Distance
+                  </span>
                 </div>
-                <p className="text-xl font-bold text-mountain-900">
+                <p className="text-lg sm:text-xl font-bold text-mountain-900">
                   {formatDistance(tour.distance)}
                 </p>
               </div>
             )}
 
             {tour.duration && (
-              <div className="bg-mountain-50 p-4 rounded-lg">
+              <div className="bg-mountain-50 p-3 sm:p-4 rounded-lg">
                 <div className="flex items-center gap-2 text-mountain-600 mb-1">
-                  <Clock className="w-5 h-5" />
-                  <span className="text-sm font-medium">Duration</span>
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-xs sm:text-sm font-medium">
+                    Duration
+                  </span>
                 </div>
-                <p className="text-xl font-bold text-mountain-900">
+                <p className="text-lg sm:text-xl font-bold text-mountain-900">
                   {formatDuration(tour.duration)}
                 </p>
               </div>
             )}
 
             {tour.grade && (
-              <div className="bg-mountain-50 p-4 rounded-lg">
+              <div className="bg-mountain-50 p-3 sm:p-4 rounded-lg">
                 <div className="text-mountain-600 mb-1">
-                  <span className="text-sm font-medium">Grade</span>
+                  <span className="text-xs sm:text-sm font-medium">Grade</span>
                 </div>
-                <p className="text-xl font-bold text-mountain-900">
+                <p className="text-lg sm:text-xl font-bold text-mountain-900">
                   {tour.grade}
                 </p>
               </div>

@@ -103,6 +103,7 @@ export async function POST(
         tourId: params.id,
         userId: session.user.id,
         elevationGain: tour.elevation,
+        distance: tour.distance,
         duration,
       },
       include: {

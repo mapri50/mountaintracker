@@ -127,44 +127,7 @@ export class BergsteigenScraper {
     $: cheerio.CheerioAPI,
     sectionName: string
   ): string | undefined {
-    // Try multiple patterns to find the section
-
     // Pattern 1: Look for heading elements containing the section name
-    const headingSelectors = ["h1", "h2", "h3", "h4", "h5", "h6", ".heading"];
-    for (const headingSelector of headingSelectors) {
-      const headings = $(headingSelector);
-      headings.each((_, heading) => {
-        const headingText = $(heading).text().trim().toLowerCase();
-        if (headingText.includes(sectionName.toLowerCase())) {
-          // Found the heading, now get the following content
-          const content = this.getContentAfterHeading($, heading);
-          if (content) {
-            return false; // Break the each loop
-          }
-        }
-      });
-    }
-
-    // Pattern 2: Look for elements with class containing the section name
-    const classPatterns = [
-      `.${sectionName.toLowerCase()}`,
-      `[class*="${sectionName.toLowerCase()}"]`,
-      `#${sectionName.toLowerCase()}`,
-    ];
-
-    for (const pattern of classPatterns) {
-      try {
-        const element = $(pattern).first();
-        if (element.length > 0) {
-          const text = element.text().trim();
-          if (text) return text;
-        }
-      } catch {
-        // Invalid selector, continue to next pattern
-      }
-    }
-
-    // Pattern 3: Look for heading followed by sibling content
     const allHeadings = $("h1, h2, h3, h4, h5, h6");
     let foundContent: string | undefined;
 
@@ -182,15 +145,26 @@ export class BergsteigenScraper {
       return foundContent;
     }
 
-    // Pattern 4: Look for text containing the section name and extract following paragraph
-    const bodyText = $("body").html() || "";
-    const sectionRegex = new RegExp(
-      `${sectionName}[^<]*</(?:h[1-6]|strong|b|span)>\\s*(?:<[^>]*>)*\\s*([^<]+)`,
-      "i"
-    );
-    const match = bodyText.match(sectionRegex);
-    if (match && match[1]) {
-      return match[1].trim();
+    // Pattern 2: Look for elements with class or id containing the section name
+    // Validate sectionName to only contain alphanumeric characters
+    const sanitizedName = sectionName.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (sanitizedName) {
+      const classPatterns = [
+        `.${sanitizedName}`,
+        `#${sanitizedName}`,
+      ];
+
+      for (const pattern of classPatterns) {
+        try {
+          const element = $(pattern).first();
+          if (element.length > 0) {
+            const text = element.text().trim();
+            if (text) return text;
+          }
+        } catch {
+          // Invalid selector, continue to next pattern
+        }
+      }
     }
 
     return undefined;

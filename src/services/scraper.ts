@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
+import type { Element } from "domhandler";
 import { Condition, Activity } from "@prisma/client";
 
 export interface ScrapedTourData {
@@ -175,7 +176,7 @@ export class BergsteigenScraper {
    */
   private static getContentAfterHeading(
     $: cheerio.CheerioAPI,
-    heading: cheerio.Element
+    heading: Element
   ): string | undefined {
     const contentParts: string[] = [];
     let current = $(heading).next();

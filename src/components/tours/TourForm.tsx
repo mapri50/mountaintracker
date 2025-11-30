@@ -41,6 +41,9 @@ export function TourForm({ initialData, onSubmit, onCancel }: TourFormProps) {
           grade: initialData.grade ?? undefined,
           imageUrl: initialData.imageUrl ?? undefined,
           notes: initialData.notes ?? undefined,
+          plannedDate: initialData.plannedDate
+            ? new Date(initialData.plannedDate).toISOString().split("T")[0]
+            : undefined,
         }
       : {
           conditions: ["SOMMER"] as Condition[],

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Tour } from "@prisma/client";
@@ -12,7 +12,7 @@ import { searchTours } from "@/lib/utils";
 import { Loader2, Calendar, X, MapPin, TrendingUp, Clock } from "lucide-react";
 
 export default function CalendarPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [tours, setTours] = useState<Tour[]>([]);
   const [isLoading, setIsLoading] = useState(true);

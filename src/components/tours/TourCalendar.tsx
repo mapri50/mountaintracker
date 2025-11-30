@@ -86,14 +86,17 @@ export function TourCalendar({
     "December",
   ];
 
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   const renderCalendarDays = () => {
     const days = [];
-    const totalCells = Math.ceil((startingDayOfWeek + daysInMonth) / 7) * 7;
+    // Adjust for Monday as first day of week (0 = Monday, 6 = Sunday)
+    const adjustedStartingDay =
+      startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1;
+    const totalCells = Math.ceil((adjustedStartingDay + daysInMonth) / 7) * 7;
 
     for (let i = 0; i < totalCells; i++) {
-      const dayNumber = i - startingDayOfWeek + 1;
+      const dayNumber = i - adjustedStartingDay + 1;
       const isValidDay = dayNumber > 0 && dayNumber <= daysInMonth;
 
       if (isValidDay) {

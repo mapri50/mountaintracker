@@ -18,7 +18,7 @@ import {
   Loader2,
   Activity,
 } from "lucide-react";
-import { formatElevation, formatDistance, formatDuration } from "@/lib/utils";
+import { formatElevation } from "@/lib/utils";
 import { ACTIVITY_LABELS } from "@/lib/constants";
 
 interface UserStats {

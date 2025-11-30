@@ -23,17 +23,6 @@ function formatDateLocal(date: Date): string {
 }
 
 /**
- * Get the Sunday of the week for a given date
- */
-function getWeekEnd(date: Date): Date {
-  const monday = getWeekStart(date);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-  return sunday;
-}
-
-/**
  * Update user statistics including weekly streaks
  */
 export async function updateUserStats(userId: string) {

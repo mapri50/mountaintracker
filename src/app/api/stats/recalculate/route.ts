@@ -7,7 +7,7 @@ import { updateUserStats } from "@/lib/stats";
  * Manually trigger stats recalculation
  * Useful for fixing stats that got out of sync
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 

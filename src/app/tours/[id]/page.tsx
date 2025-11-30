@@ -7,15 +7,8 @@ import { Tour } from "@prisma/client";
 import { TourForm } from "@/components/tours/TourForm";
 import { AscentForm } from "@/components/tours/AscentForm";
 import { TourFormData } from "@/lib/validations";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/Card";
+import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
 import {
   CONDITION_LABELS,
   ACTIVITY_LABELS,

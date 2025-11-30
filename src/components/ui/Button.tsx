@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode, MouseEvent } from "react";
 import { cn } from "@/lib/utils";
 
 interface ButtonProps {
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   type?: "button" | "submit" | "reset";
   variant?: "primary" | "secondary" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";

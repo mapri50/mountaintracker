@@ -13,13 +13,56 @@ import { searchTours } from "@/lib/utils";
 import { Filter, Loader2, EyeOff } from "lucide-react";
 
 export default function ToursPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [tours, setTours] = useState<Tour[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [conditionFilter, setConditionFilter] = useState<string>("all");
   const [activityFilter, setActivityFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Apply search and filters - must be before any early returns
+  const filteredTours = useMemo(() => {
+    let filtered = tours;
+
+    // Apply condition filter
+    if (conditionFilter !== "all") {
+      filtered = filtered.filter((tour) =>
+        tour.conditions.includes(conditionFilter as Condition)
+      );
+    }
+
+    // Apply activity filter
+    if (activityFilter !== "all") {
+      filtered = filtered.filter(
+        (tour) => tour.activity === (activityFilter as Activity)
+      );
+    }
+
+    // Apply search
+    filtered = searchTours(filtered, searchQuery);
+
+    return filtered;
+  }, [tours, conditionFilter, activityFilter, searchQuery]);
+
+  const relevantTours = filteredTours.filter((tour) => !tour.irrelevant);
+  const irrelevantTours = filteredTours.filter((tour) => tour.irrelevant);
+
+  const conditionOptions = [
+    { value: "all", label: "All Conditions" },
+    ...Object.entries(CONDITION_LABELS).map(([value, label]) => ({
+      value,
+      label,
+    })),
+  ];
+
+  const activityOptions = [
+    { value: "all", label: "All Activities" },
+    ...Object.entries(ACTIVITY_LABELS).map(([value, label]) => ({
+      value,
+      label,
+    })),
+  ];
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -64,52 +107,11 @@ export default function ToursPage() {
     );
   }
 
-  const conditionOptions = [
-    { value: "all", label: "All Conditions" },
-    ...Object.entries(CONDITION_LABELS).map(([value, label]) => ({
-      value,
-      label,
-    })),
-  ];
-
-  const activityOptions = [
-    { value: "all", label: "All Activities" },
-    ...Object.entries(ACTIVITY_LABELS).map(([value, label]) => ({
-      value,
-      label,
-    })),
-  ];
-
-  // Apply search and filters
-  const filteredTours = useMemo(() => {
-    let filtered = tours;
-
-    // Apply condition filter
-    if (conditionFilter !== "all") {
-      filtered = filtered.filter((tour) =>
-        tour.conditions.includes(conditionFilter as Condition)
-      );
-    }
-
-    // Apply activity filter
-    if (activityFilter !== "all") {
-      filtered = filtered.filter(
-        (tour) => tour.activity === (activityFilter as Activity)
-      );
-    }
-
-    // Apply search
-    filtered = searchTours(filtered, searchQuery);
-
-    return filtered;
-  }, [tours, conditionFilter, activityFilter, searchQuery]);
-
-  const relevantTours = filteredTours.filter((tour) => !tour.irrelevant);
-  const irrelevantTours = filteredTours.filter((tour) => tour.irrelevant);
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      \n{" "}
       <div className="mb-8">
+        \n{" "}
         <h1 className="text-4xl font-bold text-mountain-900 mb-2">My Tours</h1>
         <p className="text-mountain-600">
           {filteredTours.length} {filteredTours.length === 1 ? "tour" : "tours"}{" "}
@@ -120,7 +122,6 @@ export default function ToursPage() {
             ` (${irrelevantTours.length} marked as irrelevant)`}
         </p>
       </div>
-
       <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
         <div className="flex items-center gap-2 mb-3">
           <Filter className="w-5 h-5 text-mountain-600" />
@@ -165,7 +166,6 @@ export default function ToursPage() {
           </div>
         )}
       </div>
-
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
@@ -181,7 +181,7 @@ export default function ToursPage() {
         <>
           {relevantTours.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {relevantTours.map((tour: any) => (
+              {relevantTours.map((tour: Tour) => (
                 <TourCard
                   key={tour.id}
                   tour={tour}
@@ -209,7 +209,7 @@ export default function ToursPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {irrelevantTours.map((tour: any) => (
+                {irrelevantTours.map((tour: Tour) => (
                   <TourCard
                     key={tour.id}
                     tour={tour}

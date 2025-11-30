@@ -13,6 +13,16 @@ function getWeekStart(date: Date): Date {
 }
 
 /**
+ * Format date as YYYY-MM-DD in local timezone
+ */
+function formatDateLocal(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Get the Sunday of the week for a given date
  */
 function getWeekEnd(date: Date): Date {
@@ -21,16 +31,6 @@ function getWeekEnd(date: Date): Date {
   sunday.setDate(monday.getDate() + 6);
   sunday.setHours(23, 59, 59, 999);
   return sunday;
-}
-
-/**
- * Calculate weeks between two dates
- */
-function getWeeksBetween(date1: Date, date2: Date): number {
-  const week1 = getWeekStart(date1);
-  const week2 = getWeekStart(date2);
-  const diffMs = week1.getTime() - week2.getTime();
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
 }
 
 /**
@@ -85,7 +85,7 @@ export async function updateUserStats(userId: string) {
   for (const ascent of ascents) {
     const ascentDate = new Date(ascent.date);
     const weekStart = getWeekStart(ascentDate);
-    const weekKey = weekStart.toISOString().split("T")[0]; // Use Monday's date as key
+    const weekKey = formatDateLocal(weekStart); // Use Monday's date as key in local timezone
 
     if (!weekMap.has(weekKey)) {
       weekMap.set(weekKey, ascentDate);
@@ -101,25 +101,31 @@ export async function updateUserStats(userId: string) {
 
   const today = new Date();
   const currentWeekStart = getWeekStart(today);
-  const currentWeekKey = currentWeekStart.toISOString().split("T")[0];
+  const currentWeekKey = formatDateLocal(currentWeekStart);
 
   // Calculate streaks
   let lastWeekKey: string | null = null;
+  let currentStreakFromMostRecent = 0;
 
   for (const weekKey of weeks) {
     if (!lastWeekKey) {
       // First week
       tempStreak = 1;
+      currentStreakFromMostRecent = 1;
       lastWeekKey = weekKey;
     } else {
       // Check if this week is consecutive to the last week
+      // weekKeys are already Monday dates (week starts), compare them directly
       const lastWeekDate = new Date(lastWeekKey);
       const currentWeekDate = new Date(weekKey);
-      const weeksDiff = getWeeksBetween(lastWeekDate, currentWeekDate);
+      // Since weeks are sorted newest first, currentWeek should be 1 week before lastWeek
+      const diffMs = lastWeekDate.getTime() - currentWeekDate.getTime();
+      const weeksDiff = Math.round(diffMs / (1000 * 60 * 60 * 24 * 7));
 
       if (weeksDiff === 1) {
         // Consecutive week
         tempStreak++;
+        currentStreakFromMostRecent = tempStreak;
       } else {
         // Streak broken
         longestStreak = Math.max(longestStreak, tempStreak);
@@ -134,15 +140,17 @@ export async function updateUserStats(userId: string) {
 
   // Current streak is only valid if it includes current week or last week
   const mostRecentWeekKey = weeks[0];
-  const mostRecentWeekDate = new Date(mostRecentWeekKey);
-  const weeksFromNow = getWeeksBetween(currentWeekStart, mostRecentWeekDate);
+  // Both are already week start dates (Mondays), compare them directly
+  const diffMs =
+    currentWeekStart.getTime() - new Date(mostRecentWeekKey).getTime();
+  const weeksFromNow = Math.round(diffMs / (1000 * 60 * 60 * 24 * 7));
 
   if (weeksFromNow === 0) {
     // Ascent in current week
-    currentStreak = tempStreak;
+    currentStreak = currentStreakFromMostRecent;
   } else if (weeksFromNow === 1) {
     // Ascent in last week - streak continues if they do one this week
-    currentStreak = tempStreak;
+    currentStreak = currentStreakFromMostRecent;
   } else {
     // Streak broken
     currentStreak = 0;

@@ -78,6 +78,7 @@ export async function POST(request: NextRequest) {
         duration: data.duration || null,
         sourceUrl: data.sourceUrl || null,
         imageUrl: data.imageUrl || null,
+        plannedDate: data.plannedDate ? new Date(data.plannedDate) : null,
         userId: session.user.id,
       },
     });

@@ -27,6 +27,7 @@ export const tourSchema = z.object({
   imageUrl: z.string().url().optional().or(z.literal("")),
   notes: z.string().optional(),
   irrelevant: z.boolean().optional(),
+  plannedDate: z.string().optional().or(z.literal("")),
 });
 
 export type TourFormData = z.infer<typeof tourSchema>;

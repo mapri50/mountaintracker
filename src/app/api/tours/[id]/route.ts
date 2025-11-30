@@ -73,6 +73,12 @@ export async function PATCH(
       data: {
         ...validation.data,
         irrelevant: validation.data.irrelevant ?? tour.irrelevant,
+        plannedDate:
+          validation.data.plannedDate !== undefined
+            ? validation.data.plannedDate
+              ? new Date(validation.data.plannedDate)
+              : null
+            : undefined,
       },
     });
 

@@ -3,7 +3,15 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Mountain, Plus, LogOut, BarChart3, Menu, X } from "lucide-react";
+import {
+  Mountain,
+  Plus,
+  LogOut,
+  BarChart3,
+  Menu,
+  X,
+  Calendar,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 export function Navbar() {
@@ -32,6 +40,12 @@ export function Navbar() {
                 <span className="text-sm text-mountain-600">
                   Welcome, {session.user.username}
                 </span>
+                <Link href="/tours/calendar">
+                  <Button size="sm" variant="ghost">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    Calendar
+                  </Button>
+                </Link>
                 <Link href="/stats">
                   <Button size="sm" variant="ghost">
                     <BarChart3 className="w-4 h-4 mr-1" />
@@ -77,6 +91,16 @@ export function Navbar() {
               <div className="px-3 py-2 text-sm text-mountain-600 font-medium border-b border-mountain-100 mb-2">
                 Welcome, {session.user.username}
               </div>
+              <Link href="/tours/calendar" onClick={closeMobileMenu}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="w-full justify-start"
+                >
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Calendar
+                </Button>
+              </Link>
               <Link href="/stats" onClick={closeMobileMenu}>
                 <Button
                   size="sm"

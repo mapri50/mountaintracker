@@ -211,6 +211,13 @@ export function TourForm({ initialData, onSubmit, onCancel }: TourFormProps) {
         placeholder="Personal notes about this tour..."
       />
 
+      <Input
+        label="Planned Date"
+        type="date"
+        {...register("plannedDate")}
+        error={errors.plannedDate?.message}
+      />
+
       <div className="flex gap-3 justify-end">
         {onCancel && (
           <Button type="button" variant="ghost" onClick={onCancel}>

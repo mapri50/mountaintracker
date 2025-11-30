@@ -64,6 +64,9 @@ model Tour {
   // Irrelevant flag
   irrelevant Boolean @default(false)
 
+  // Planning
+  plannedDate DateTime? // Date when tour is planned to be done
+
   // Relations
   userId  String
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)

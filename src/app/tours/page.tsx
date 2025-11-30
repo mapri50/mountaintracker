@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Tour, Condition, Activity } from "@prisma/client";
 import { TourCard } from "@/components/tours/TourCard";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { SearchBar } from "@/components/ui/SearchBar";
 import { CONDITION_LABELS, ACTIVITY_LABELS } from "@/lib/constants";
+import { searchTours } from "@/lib/utils";
 import { Filter, Loader2, EyeOff } from "lucide-react";
 
 export default function ToursPage() {
@@ -17,6 +19,7 @@ export default function ToursPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [conditionFilter, setConditionFilter] = useState<string>("all");
   const [activityFilter, setActivityFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -28,17 +31,12 @@ export default function ToursPage() {
     if (status === "authenticated") {
       fetchTours();
     }
-  }, [status, conditionFilter, activityFilter]);
+  }, [status]);
 
   const fetchTours = async () => {
     setIsLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (conditionFilter !== "all")
-        params.append("condition", conditionFilter);
-      if (activityFilter !== "all") params.append("activity", activityFilter);
-
-      const response = await fetch(`/api/tours?${params.toString()}`);
+      const response = await fetch(`/api/tours`);
       if (response.ok) {
         const data = await response.json();
         setTours(data);
@@ -82,15 +80,42 @@ export default function ToursPage() {
     })),
   ];
 
-  const relevantTours = tours.filter((tour) => !tour.irrelevant);
-  const irrelevantTours = tours.filter((tour) => tour.irrelevant);
+  // Apply search and filters
+  const filteredTours = useMemo(() => {
+    let filtered = tours;
+
+    // Apply condition filter
+    if (conditionFilter !== "all") {
+      filtered = filtered.filter((tour) =>
+        tour.conditions.includes(conditionFilter as Condition)
+      );
+    }
+
+    // Apply activity filter
+    if (activityFilter !== "all") {
+      filtered = filtered.filter(
+        (tour) => tour.activity === (activityFilter as Activity)
+      );
+    }
+
+    // Apply search
+    filtered = searchTours(filtered, searchQuery);
+
+    return filtered;
+  }, [tours, conditionFilter, activityFilter, searchQuery]);
+
+  const relevantTours = filteredTours.filter((tour) => !tour.irrelevant);
+  const irrelevantTours = filteredTours.filter((tour) => tour.irrelevant);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-mountain-900 mb-2">My Tours</h1>
         <p className="text-mountain-600">
-          {tours.length} {tours.length === 1 ? "tour" : "tours"} found
+          {filteredTours.length} {filteredTours.length === 1 ? "tour" : "tours"}{" "}
+          found
+          {filteredTours.length !== tours.length &&
+            ` (filtered from ${tours.length} total)`}
           {irrelevantTours.length > 0 &&
             ` (${irrelevantTours.length} marked as irrelevant)`}
         </p>
@@ -99,7 +124,16 @@ export default function ToursPage() {
       <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
         <div className="flex items-center gap-2 mb-3">
           <Filter className="w-5 h-5 text-mountain-600" />
-          <h2 className="text-lg font-semibold text-mountain-800">Filters</h2>
+          <h2 className="text-lg font-semibold text-mountain-800">
+            Search & Filters
+          </h2>
+        </div>
+        <div className="mb-4">
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search tours by name, location, activity, conditions..."
+          />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Select
@@ -113,7 +147,9 @@ export default function ToursPage() {
             options={activityOptions}
           />
         </div>
-        {(conditionFilter !== "all" || activityFilter !== "all") && (
+        {(conditionFilter !== "all" ||
+          activityFilter !== "all" ||
+          searchQuery !== "") && (
           <div className="mt-3">
             <Button
               variant="ghost"
@@ -121,9 +157,10 @@ export default function ToursPage() {
               onClick={() => {
                 setConditionFilter("all");
                 setActivityFilter("all");
+                setSearchQuery("");
               }}
             >
-              Clear Filters
+              Clear All
             </Button>
           </div>
         )}

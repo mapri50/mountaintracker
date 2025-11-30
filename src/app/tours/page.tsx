@@ -12,10 +12,12 @@ import { CONDITION_LABELS, ACTIVITY_LABELS } from "@/lib/constants";
 import { searchTours } from "@/lib/utils";
 import { Filter, Loader2, EyeOff } from "lucide-react";
 
+type TourWithCount = Tour & { ascentCount?: number };
+
 export default function ToursPage() {
   const { status } = useSession();
   const router = useRouter();
-  const [tours, setTours] = useState<Tour[]>([]);
+  const [tours, setTours] = useState<TourWithCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [conditionFilter, setConditionFilter] = useState<string>("all");
   const [activityFilter, setActivityFilter] = useState<string>("all");
@@ -181,7 +183,7 @@ export default function ToursPage() {
         <>
           {relevantTours.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {relevantTours.map((tour: Tour) => (
+              {relevantTours.map((tour: TourWithCount) => (
                 <TourCard
                   key={tour.id}
                   tour={tour}
@@ -209,7 +211,7 @@ export default function ToursPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {irrelevantTours.map((tour: Tour) => (
+                {irrelevantTours.map((tour: TourWithCount) => (
                   <TourCard
                     key={tour.id}
                     tour={tour}

@@ -54,8 +54,14 @@ export async function POST(request: NextRequest) {
     console.error("Error uploading tour image:", {
       message: error?.message,
       status: error?.status,
-      response: error?.response,
+      responseStatus: error?.response?.status,
     });
+    if (error?.status) {
+      return NextResponse.json(
+        { error: "Blob upload failed", status: error.status },
+        { status: error.status }
+      );
+    }
     return NextResponse.json(
       { error: error?.message || "Internal server error" },
       { status: 500 }

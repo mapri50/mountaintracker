@@ -98,7 +98,7 @@ export async function updateUserStats(userId: string) {
 
   for (const weekKey of weeks) {
     if (!lastWeekKey) {
-      // First week
+      // First weekk
       tempStreak = 1;
       currentStreakFromMostRecent = 1;
       lastWeekKey = weekKey;

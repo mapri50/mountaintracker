@@ -22,7 +22,7 @@
     "formidable": "^3.5.4",
     "gpxparser": "^3.0.8",
     "lucide-react": "^0.400.0",
-    "next": "^14.2.0",
+    "next": "14.2.35",
     "next-auth": "^4.24.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",

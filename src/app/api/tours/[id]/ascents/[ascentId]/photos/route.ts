@@ -47,6 +47,15 @@ export async function POST(
       );
     }
 
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) {
+      console.error("Blob upload failed: missing BLOB_READ_WRITE_TOKEN");
+      return NextResponse.json(
+        { error: "Blob storage not configured" },
+        { status: 500 }
+      );
+    }
+
     const uploadedPhotos = [];
 
     for (const file of photoFiles) {
@@ -68,7 +77,7 @@ export async function POST(
       const blob = await put(objectKey, readStream, {
         access: "public",
         contentType: file.mimetype || undefined,
-        token: process.env.BLOB_READ_WRITE_TOKEN,
+        token,
       });
 
       // Extract caption and geotags if provided
@@ -98,7 +107,11 @@ export async function POST(
 
     return NextResponse.json({ photos: uploadedPhotos });
   } catch (error: any) {
-    console.error("Error uploading photos:", error);
+    console.error("Error uploading photos:", {
+      message: error?.message,
+      status: error?.status,
+      response: error?.response,
+    });
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: 500 }

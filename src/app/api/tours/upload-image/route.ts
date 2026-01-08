@@ -36,17 +36,30 @@ export async function POST(request: NextRequest) {
       .slice(0, 80);
     const objectKey = `tours/${Date.now()}-${safeBase || "image"}${extension}`;
 
+    const token = process.env.BLOB_READ_WRITE_TOKEN;
+    if (!token) {
+      console.error("Blob upload failed: missing BLOB_READ_WRITE_TOKEN");
+      return NextResponse.json(
+        { error: "Blob storage not configured" },
+        { status: 500 }
+      );
+    }
+
     const readStream = fs.createReadStream(imageFile.filepath);
 
     const blob = await put(objectKey, readStream, {
       access: "public",
       contentType: imageFile.mimetype || undefined,
-      token: process.env.BLOB_READ_WRITE_TOKEN,
+      token,
     });
 
     return NextResponse.json({ url: blob.url }, { status: 201 });
   } catch (error: any) {
-    console.error("Error uploading tour image:", error);
+    console.error("Error uploading tour image:", {
+      message: error?.message,
+      status: error?.status,
+      response: error?.response,
+    });
     return NextResponse.json(
       { error: error?.message || "Internal server error" },
       { status: 500 }

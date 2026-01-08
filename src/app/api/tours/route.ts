@@ -68,17 +68,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = validation.data;
+    const { plannedDate, imageUrl, ...rest } = validation.data;
+    const normalizedImageUrl = imageUrl?.trim() ? imageUrl.trim() : null;
 
     const tour = await prisma.tour.create({
       data: {
-        ...data,
-        elevation: data.elevation || null,
-        distance: data.distance || null,
-        duration: data.duration || null,
-        sourceUrl: data.sourceUrl || null,
-        imageUrl: data.imageUrl || null,
-        plannedDate: data.plannedDate ? new Date(data.plannedDate) : null,
+        ...rest,
+        elevation: rest.elevation || null,
+        distance: rest.distance || null,
+        duration: rest.duration || null,
+        sourceUrl: rest.sourceUrl || null,
+        imageUrl: normalizedImageUrl,
+        plannedDate: plannedDate ? new Date(plannedDate) : null,
         userId: session.user.id,
       },
     });

@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { Condition, Activity } from "@prisma/client";
 
+const isHttpUrl = (value: string) => {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 export const tourSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
@@ -24,7 +33,18 @@ export const tourSchema = z.object({
     .transform((val) => (val && !isNaN(val) && val > 0 ? val : undefined)),
   difficulty: z.string().optional(),
   grade: z.string().optional(),
-  imageUrl: z.string().url().optional().or(z.literal("")),
+  imageUrl: z
+    .string()
+    .trim()
+    .optional()
+    .refine(
+      (val) =>
+        !val || val === "" || isHttpUrl(val) || val.startsWith("/uploads/"),
+      {
+        message: "Use a valid URL or upload an image.",
+      }
+    )
+    .transform((val) => (val === "" ? undefined : val)),
   notes: z.string().optional(),
   irrelevant: z.boolean().optional(),
   plannedDate: z.string().optional().or(z.literal("")),

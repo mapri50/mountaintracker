@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { tourSchema, TourFormData } from "@/lib/validations";
@@ -25,6 +25,7 @@ export function TourForm({ initialData, onSubmit, onCancel }: TourFormProps) {
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors },
   } = useForm<TourFormData>({
     resolver: zodResolver(tourSchema),
@@ -51,19 +52,77 @@ export function TourForm({ initialData, onSubmit, onCancel }: TourFormProps) {
         },
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    initialData?.imageUrl ?? null
+  );
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!imagePreview?.startsWith("blob:")) return;
+
+    return () => {
+      URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
+
   // Update form when initialData changes
   useEffect(() => {
     if (initialData) {
       reset(initialData as any);
+      setImagePreview(initialData.imageUrl ?? null);
+    } else {
+      setImagePreview(null);
     }
+    setImageFile(null);
   }, [initialData, reset]);
 
   const onFormSubmit = async (data: TourFormData) => {
     setIsSubmitting(true);
+    setUploadError(null);
+
     try {
-      await onSubmit(data);
+      let imageUrl = data.imageUrl?.trim() || undefined;
+
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+
+        const uploadResponse = await fetch("/api/tours/upload-image", {
+          method: "POST",
+          body: formData,
+        });
+
+        const uploadResult = await uploadResponse.json().catch(() => ({}));
+
+        if (!uploadResponse.ok) {
+          throw new Error(uploadResult.error || "Failed to upload image");
+        }
+
+        imageUrl = uploadResult.url;
+        setValue("imageUrl", imageUrl);
+      }
+
+      await onSubmit({ ...data, imageUrl });
+    } catch (error: any) {
+      console.error("Error saving tour:", error);
+      setUploadError(error?.message || "Failed to save tour.");
+      throw error;
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setUploadError(null);
+
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImageFile(null);
+      setImagePreview(initialData?.imageUrl ?? null);
     }
   };
 
@@ -192,12 +251,38 @@ export function TourForm({ initialData, onSubmit, onCancel }: TourFormProps) {
         />
       </div>
 
-      <Input
-        label="Image URL"
-        {...register("imageUrl")}
-        error={errors.imageUrl?.message}
-        placeholder="https://..."
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input
+          label="Image URL"
+          {...register("imageUrl")}
+          error={errors.imageUrl?.message}
+          placeholder="https://..."
+        />
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Upload Image
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+            disabled={isSubmitting}
+          />
+          {uploadError && <p className="text-sm text-red-600">{uploadError}</p>}
+          {imagePreview && (
+            <div className="relative h-32 w-full overflow-hidden rounded-md border border-gray-200">
+              {/* Basic preview without Next/Image to support blob URLs */}
+              <img
+                src={imagePreview}
+                alt="Tour preview"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
+        </div>
+      </div>
 
       <Input
         label="Source URL"

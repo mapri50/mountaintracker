@@ -68,15 +68,27 @@ export async function PATCH(
       return NextResponse.json({ error: "Tour not found" }, { status: 404 });
     }
 
+    const { plannedDate, irrelevant, imageUrl, ...rest } = validation.data;
+
+    const normalizedImageUrl =
+      imageUrl !== undefined
+        ? imageUrl?.trim()
+          ? imageUrl.trim()
+          : null
+        : undefined;
+
     const updatedTour = await prisma.tour.update({
       where: { id: params.id },
       data: {
-        ...validation.data,
-        irrelevant: validation.data.irrelevant ?? tour.irrelevant,
+        ...rest,
+        irrelevant: irrelevant ?? tour.irrelevant,
+        ...(normalizedImageUrl !== undefined
+          ? { imageUrl: normalizedImageUrl }
+          : {}),
         plannedDate:
-          validation.data.plannedDate !== undefined
-            ? validation.data.plannedDate
-              ? new Date(validation.data.plannedDate)
+          plannedDate !== undefined
+            ? plannedDate
+              ? new Date(plannedDate)
               : null
             : undefined,
       },

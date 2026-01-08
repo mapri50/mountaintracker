@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { put } from "@vercel/blob";
+import path from "path";
+import fs from "fs";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { parseFormData, saveUploadedFile, isImageFile } from "@/lib/upload";
+import { parseFormData, isImageFile } from "@/lib/upload";
+
+export const runtime = "nodejs";
 
 export async function POST(
   request: NextRequest,
@@ -49,8 +54,22 @@ export async function POST(
         continue; // Skip non-image files
       }
 
-      // Save photo to public/uploads
-      const url = await saveUploadedFile(file, "uploads/photos");
+      const extension = path.extname(file.originalFilename || "").toLowerCase();
+      const safeBase = path
+        .basename(file.originalFilename || "photo", extension)
+        .replace(/[^a-zA-Z0-9_-]/g, "-")
+        .slice(0, 80);
+      const objectKey = `ascents/${params.ascentId}/${Date.now()}-${
+        safeBase || "image"
+      }${extension}`;
+
+      const readStream = fs.createReadStream(file.filepath);
+
+      const blob = await put(objectKey, readStream, {
+        access: "public",
+        contentType: file.mimetype || undefined,
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
 
       // Extract caption and geotags if provided
       const caption = Array.isArray(fields.caption)
@@ -66,7 +85,7 @@ export async function POST(
       // Create photo record
       const photo = await prisma.photo.create({
         data: {
-          url,
+          url: blob.url,
           caption: caption || null,
           latitude: latitude ? parseFloat(latitude) : null,
           longitude: longitude ? parseFloat(longitude) : null,

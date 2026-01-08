@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { put } from "@vercel/blob";
 import path from "path";
-import fs from "fs";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { parseFormData, isImageFile } from "@/lib/upload";
 
 export const runtime = "nodejs";
 
@@ -33,12 +31,10 @@ export async function POST(
       return NextResponse.json({ error: "Ascent not found" }, { status: 404 });
     }
 
-    // Parse multipart form data
-    const { fields, files } = await parseFormData(request as any);
-
-    const photoFiles = Array.isArray(files.photos)
-      ? files.photos
-      : [files.photos].filter(Boolean);
+    const formData = await request.formData();
+    const photoFiles = formData
+      .getAll("photos")
+      .filter((f): f is File => f instanceof File);
 
     if (photoFiles.length === 0) {
       return NextResponse.json(
@@ -56,48 +52,53 @@ export async function POST(
       );
     }
 
+    const captionField = formData.get("caption");
+    const latitudeField = formData.get("latitude");
+    const longitudeField = formData.get("longitude");
+
     const uploadedPhotos = [];
 
     for (const file of photoFiles) {
-      if (!file || !isImageFile(file)) {
+      if (!file.type.startsWith("image/")) {
         continue; // Skip non-image files
       }
 
-      const extension = path.extname(file.originalFilename || "").toLowerCase();
+      const extension = path.extname(file.name || "").toLowerCase();
       const safeBase = path
-        .basename(file.originalFilename || "photo", extension)
+        .basename(file.name || "photo", extension)
         .replace(/[^a-zA-Z0-9_-]/g, "-")
         .slice(0, 80);
       const objectKey = `ascents/${params.ascentId}/${Date.now()}-${
         safeBase || "image"
       }${extension}`;
 
-      const readStream = fs.createReadStream(file.filepath);
+      const buffer = Buffer.from(await file.arrayBuffer());
 
-      const blob = await put(objectKey, readStream, {
+      const blob = await put(objectKey, buffer, {
         access: "public",
-        contentType: file.mimetype || undefined,
+        contentType: file.type || undefined,
         token,
       });
 
-      // Extract caption and geotags if provided
-      const caption = Array.isArray(fields.caption)
-        ? fields.caption[0]
-        : fields.caption;
-      const latitude = Array.isArray(fields.latitude)
-        ? fields.latitude[0]
-        : fields.latitude;
-      const longitude = Array.isArray(fields.longitude)
-        ? fields.longitude[0]
-        : fields.longitude;
+      const caption =
+        typeof captionField === "string" && captionField.length > 0
+          ? captionField
+          : null;
+      const latitude =
+        typeof latitudeField === "string" && latitudeField.length > 0
+          ? parseFloat(latitudeField)
+          : null;
+      const longitude =
+        typeof longitudeField === "string" && longitudeField.length > 0
+          ? parseFloat(longitudeField)
+          : null;
 
-      // Create photo record
       const photo = await prisma.photo.create({
         data: {
           url: blob.url,
-          caption: caption || null,
-          latitude: latitude ? parseFloat(latitude) : null,
-          longitude: longitude ? parseFloat(longitude) : null,
+          caption,
+          latitude,
+          longitude,
           ascentId: params.ascentId,
         },
       });

@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { put } from "@vercel/blob";
 import path from "path";
-import fs from "fs";
 import { authOptions } from "@/lib/auth";
-import { parseFormData, isImageFile } from "@/lib/upload";
 
 export const runtime = "nodejs";
 
@@ -16,22 +14,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { files } = await parseFormData(request as any);
-    const imageFile = Array.isArray(files.image) ? files.image[0] : files.image;
+    const formData = await request.formData();
+    const file = formData.get("image");
 
-    if (!imageFile) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: "No image uploaded" }, { status: 400 });
     }
 
-    if (!isImageFile(imageFile)) {
+    if (!file.type.startsWith("image/")) {
       return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
     }
 
-    const extension = path
-      .extname(imageFile.originalFilename || "")
-      .toLowerCase();
+    const extension = path.extname(file.name || "").toLowerCase();
     const safeBase = path
-      .basename(imageFile.originalFilename || "tour", extension)
+      .basename(file.name || "tour", extension)
       .replace(/[^a-zA-Z0-9_-]/g, "-")
       .slice(0, 80);
     const objectKey = `tours/${Date.now()}-${safeBase || "image"}${extension}`;
@@ -45,11 +41,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const readStream = fs.createReadStream(imageFile.filepath);
+    const buffer = Buffer.from(await file.arrayBuffer());
 
-    const blob = await put(objectKey, readStream, {
+    const blob = await put(objectKey, buffer, {
       access: "public",
-      contentType: imageFile.mimetype || undefined,
+      contentType: file.type || undefined,
       token,
     });
 

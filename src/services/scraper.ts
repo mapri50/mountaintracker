@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
+import type { Element } from "domhandler";
 import { Condition, Activity } from "@prisma/client";
 
 export interface ScrapedTourData {
@@ -78,29 +79,149 @@ export class BergsteigenScraper {
   }
 
   private static extractDescription($: cheerio.CheerioAPI): string | undefined {
-    const selectors = [
-      'meta[name="description"]',
-      'meta[property="og:description"]',
+    const descriptionParts: string[] = [];
+
+    // Extract Tourenbeschreibung section (main tour description)
+    const tourenbeschreibung = this.extractSection($, "Tourenbeschreibung");
+    if (tourenbeschreibung) {
+      descriptionParts.push(tourenbeschreibung);
+    }
+
+    // Extract Ausgangspunkt/Anfahrt section (starting point/arrival)
+    const ausgangspunkt = this.extractSection($, "Ausgangspunkt");
+    if (ausgangspunkt) {
+      descriptionParts.push("Ausgangspunkt/Anfahrt:\n" + ausgangspunkt);
+    }
+
+    // If we found content from sections, return the combined description
+    if (descriptionParts.length > 0) {
+      return descriptionParts.join("\n\n");
+    }
+
+    // Fallback to meta description if no sections found
+    const metaDesc = $('meta[name="description"]').attr("content");
+    if (metaDesc) {
+      const decoded = $("<div>").html(metaDesc).text();
+      return decoded;
+    }
+
+    // Try other common selectors as fallback
+    const fallbackSelectors = [
       ".tour-description",
       ".description",
       'div[itemprop="description"]',
       ".content-text",
     ];
 
-    // First try meta description
-    const metaDesc = $('meta[name="description"]').attr("content");
-    if (metaDesc) {
-      // Decode HTML entities using cheerio's built-in functionality
-      const decoded = $("<div>").html(metaDesc).text();
-      return decoded;
-    }
-
-    for (const selector of selectors) {
+    for (const selector of fallbackSelectors) {
       const text = $(selector).first().text().trim();
       if (text) return text;
     }
 
     return undefined;
+  }
+
+  /**
+   * Extracts text content from a section identified by its heading
+   */
+  private static extractSection(
+    $: cheerio.CheerioAPI,
+    sectionName: string
+  ): string | undefined {
+    // Pattern 1: Look for heading elements containing the section name
+    const allHeadings = $("h1, h2, h3, h4, h5, h6");
+    let foundContent: string | undefined;
+
+    allHeadings.each((_, heading) => {
+      const headingText = $(heading).text().trim().toLowerCase();
+      if (headingText.includes(sectionName.toLowerCase())) {
+        foundContent = this.getContentAfterHeading($, heading);
+        if (foundContent) {
+          return false; // Break the each loop
+        }
+      }
+    });
+
+    if (foundContent) {
+      return foundContent;
+    }
+
+    // Pattern 2: Look for elements with class or id containing the section name
+    // Validate sectionName to only contain alphanumeric characters
+    const sanitizedName = sectionName.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (sanitizedName) {
+      const classPatterns = [
+        `.${sanitizedName}`,
+        `#${sanitizedName}`,
+      ];
+
+      for (const pattern of classPatterns) {
+        try {
+          const element = $(pattern).first();
+          if (element.length > 0) {
+            const text = element.text().trim();
+            if (text) return text;
+          }
+        } catch {
+          // Invalid selector, continue to next pattern
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Gets text content from elements following a heading until the next heading
+   */
+  private static getContentAfterHeading(
+    $: cheerio.CheerioAPI,
+    heading: Element
+  ): string | undefined {
+    const contentParts: string[] = [];
+    let current = $(heading).next();
+    const headingTags = ["H1", "H2", "H3", "H4", "H5", "H6"];
+
+    // Collect content until we hit another heading or run out of siblings
+    while (current.length > 0) {
+      const tagName = current.prop("tagName");
+      if (tagName && headingTags.includes(tagName.toUpperCase())) {
+        break;
+      }
+
+      const text = current.text().trim();
+      if (text) {
+        contentParts.push(text);
+      }
+
+      current = current.next();
+    }
+
+    // If no siblings found, try looking at parent's next sibling or nested content
+    if (contentParts.length === 0) {
+      const parent = $(heading).parent();
+      let sibling = parent.next();
+
+      while (sibling.length > 0) {
+        const tagName = sibling.prop("tagName");
+        if (tagName && headingTags.includes(tagName.toUpperCase())) {
+          break;
+        }
+        // Also stop if sibling contains a heading
+        if (sibling.find("h1, h2, h3, h4, h5, h6").length > 0) {
+          break;
+        }
+
+        const text = sibling.text().trim();
+        if (text) {
+          contentParts.push(text);
+        }
+
+        sibling = sibling.next();
+      }
+    }
+
+    return contentParts.length > 0 ? contentParts.join("\n") : undefined;
   }
 
   private static extractLocation($: cheerio.CheerioAPI): string | undefined {

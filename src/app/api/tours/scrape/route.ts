@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { BergsteigenScraper } from "@/services/scraper";
+import {
+  importTourFromText,
+  isBergsteigenUrl,
+  looksLikeUrl,
+} from "@/services/tour-import";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,25 +17,53 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { url } = body;
+    const { url, text } = body;
+    const candidateText = typeof text === "string" ? text.trim() : "";
+    const candidateUrl = typeof url === "string" ? url.trim() : "";
 
-    if (!url || typeof url !== "string") {
-      return NextResponse.json({ error: "URL is required" }, { status: 400 });
-    }
-
-    // Validate URL is from bergsteigen.com
-    if (!url.includes("bergsteigen.com")) {
+    if (!candidateText && !candidateUrl) {
       return NextResponse.json(
-        { error: "Only bergsteigen.com URLs are supported" },
-        { status: 400 }
+        { error: "A bergsteigen.com URL or pasted tour text is required" },
+        { status: 400 },
       );
     }
 
-    const tourData = await BergsteigenScraper.scrapeTour(url);
+    if (candidateText) {
+      if (looksLikeUrl(candidateText) && isBergsteigenUrl(candidateText)) {
+        const tourData = await BergsteigenScraper.scrapeTour(candidateText);
+
+        return NextResponse.json({
+          ...tourData,
+          sourceUrl: candidateText,
+        });
+      }
+
+      const tourData = await importTourFromText(candidateText);
+
+      return NextResponse.json({
+        ...tourData,
+      });
+    }
+
+    if (!looksLikeUrl(candidateUrl)) {
+      return NextResponse.json(
+        { error: "Only valid bergsteigen.com URLs are supported" },
+        { status: 400 },
+      );
+    }
+
+    if (!isBergsteigenUrl(candidateUrl)) {
+      return NextResponse.json(
+        { error: "Only bergsteigen.com URLs are supported" },
+        { status: 400 },
+      );
+    }
+
+    const tourData = await BergsteigenScraper.scrapeTour(candidateUrl);
 
     return NextResponse.json({
       ...tourData,
-      sourceUrl: url,
+      sourceUrl: candidateUrl,
     });
   } catch (error) {
     console.error("Error scraping tour:", error);

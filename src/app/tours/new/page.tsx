@@ -7,14 +7,31 @@ import { TourForm } from "@/components/tours/TourForm";
 import { TourFormData } from "@/lib/validations";
 import { Card, CardHeader, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Download, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/Textarea";
+import { Download, Loader2, Sparkles } from "lucide-react";
+
+function isBergsteigenUrl(value: string): boolean {
+  try {
+    return new URL(value).hostname.includes("bergsteigen.com");
+  } catch {
+    return false;
+  }
+}
+
+function looksLikeUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 export default function NewTourPage() {
   const router = useRouter();
   const { status } = useSession();
   const [isImporting, setIsImporting] = useState(false);
-  const [importUrl, setImportUrl] = useState("");
+  const [importText, setImportText] = useState("");
   const [importedData, setImportedData] =
     useState<Partial<TourFormData> | null>(null);
   const [importError, setImportError] = useState("");
@@ -25,8 +42,8 @@ export default function NewTourPage() {
   }
 
   const handleImport = async () => {
-    if (!importUrl.trim()) {
-      setImportError("Please enter a URL");
+    if (!importText.trim()) {
+      setImportError("Paste a bergsteigen.com URL or copied tour text first.");
       return;
     }
 
@@ -34,12 +51,20 @@ export default function NewTourPage() {
     setImportError("");
 
     try {
+      const candidateUrl =
+        looksLikeUrl(importText) && isBergsteigenUrl(importText)
+          ? importText
+          : "";
+
       const response = await fetch("/api/tours/scrape", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url: importUrl }),
+        body: JSON.stringify({
+          text: importText,
+          url: candidateUrl,
+        }),
       });
 
       if (!response.ok) {
@@ -88,30 +113,37 @@ export default function NewTourPage() {
       <Card className="mb-6">
         <CardHeader>
           <h2 className="text-xl font-semibold text-mountain-800">
-            Import from bergsteigen.com
+            Import from bergsteigen.com or pasted text
           </h2>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-3">
-            <Input
-              value={importUrl}
-              onChange={(e) => setImportUrl(e.target.value)}
-              placeholder="https://www.bergsteigen.com/..."
-              className="flex-1"
+          <div className="space-y-3">
+            <Textarea
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              rows={7}
+              placeholder="Paste a bergsteigen.com URL here, or copy the tour page text and paste it in."
             />
-            <Button onClick={handleImport} disabled={isImporting}>
-              {isImporting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Importing...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 mr-2" />
-                  Import
-                </>
-              )}
-            </Button>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <p className="text-sm text-mountain-600 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Paste the copied page content and OpenAI will extract the
+                fields.
+              </p>
+              <Button onClick={handleImport} disabled={isImporting}>
+                {isImporting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Import
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           {importError && (
             <p className="mt-2 text-sm text-red-600">{importError}</p>

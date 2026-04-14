@@ -1,11 +1,11 @@
 # MountainTracker 🏔️
 
-A beautiful Next.js application for tracking your mountain tours, climbs, and hiking adventures. Import tours directly from bergsteigen.com or create your own.
+A beautiful Next.js application for tracking your mountain tours, climbs, and hiking adventures. Import tours directly from bergsteigen.com or paste copied tour text for AI-assisted import, then create your own.
 
 ## Features
 
 - 🔐 **Secure Authentication** - Username/password authentication with NextAuth.js
-- 🌐 **Web Scraping** - Import tours directly from bergsteigen.com URLs
+- 🌐 **Tour Import** - Import tours from bergsteigen.com URLs or pasted text with OpenAI-assisted parsing
 - 📊 **Categorization** - Organize tours by condition (Winter, Sommer, Übergang) and activity type
 - ✅ **Track Completion** - Mark tours as completed with dates
 - 🎨 **Beautiful UI** - Modern, responsive design with Tailwind CSS
@@ -75,6 +75,8 @@ Edit `.env` and configure:
 - `DATABASE_URL` - Your PostgreSQL connection string
 - `NEXTAUTH_SECRET` - Generate with: `openssl rand -base64 32`
 - `NEXTAUTH_URL` - Your app URL (http://localhost:3000 for development)
+- `OPENAI_API_KEY` - Required for pasted-text tour import
+- `OPENAI_MODEL` - Optional OpenAI chat model name for pasted-text import
 
 4. Initialize the database:
 
@@ -98,13 +100,11 @@ npm run dev
 1. Create a new project on [Vercel](https://vercel.com)
 2. Connect your GitHub repository
 3. Add a Postgres database:
-
    - Go to Storage tab
    - Create a new Postgres database
    - Vercel will automatically add the required environment variables
 
 4. Add additional environment variables:
-
    - `NEXTAUTH_SECRET` - Generate a secure random string
    - `NEXTAUTH_URL` - Your production URL (e.g., https://mountaintracker.vercel.app)
 
@@ -120,7 +120,6 @@ If you prefer to use an external PostgreSQL provider (like Supabase, Railway, or
 
 1. Create a PostgreSQL database with your provider
 2. In Vercel project settings, add environment variables:
-
    - `DATABASE_URL` - Your PostgreSQL connection string
    - `NEXTAUTH_SECRET` - Generate a secure random string
    - `NEXTAUTH_URL` - Your production URL
@@ -152,7 +151,7 @@ The application uses two main models:
 
 1. Click "New Tour" in the navigation
 2. Either:
-   - Import from bergsteigen.com by pasting a URL
+   - Import from bergsteigen.com by pasting a URL or copied page text
    - Manually fill in tour details
 3. Review and save
 

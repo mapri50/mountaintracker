@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const format = searchParams.get("format") || "json";
+    const withAscentsOnly = searchParams.get("withAscentsOnly") === "true";
 
     // Get all user data
     const tours = await prisma.tour.findMany({
@@ -27,6 +28,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    const filteredTours = withAscentsOnly
+      ? tours.filter((tour) => tour.ascents.length > 0)
+      : tours;
+
     const stats = await prisma.userStats.findUnique({
       where: { userId: session.user.id },
     });
@@ -38,12 +43,12 @@ export async function GET(request: NextRequest) {
         username: session.user.username,
       },
       stats,
-      tours,
+      tours: filteredTours,
     };
 
     if (format === "csv") {
       // Convert to CSV format
-      const csv = convertToCSV(tours);
+      const csv = convertToCSV(filteredTours);
       return new NextResponse(csv, {
         headers: {
           "Content-Type": "text/csv",

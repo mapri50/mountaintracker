@@ -58,6 +58,7 @@ export default function StatsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isRecalculating, setIsRecalculating] = useState(false);
+  const [exportOnlyWithAscents, setExportOnlyWithAscents] = useState(false);
   const [yearlyAscentGoal, setYearlyAscentGoal] = useState("");
   const [yearlyElevationGoal, setYearlyElevationGoal] = useState("");
   const [monthlyAscentGoal, setMonthlyAscentGoal] = useState("");
@@ -144,7 +145,11 @@ export default function StatsPage() {
 
   const handleExport = async (format: "json" | "csv") => {
     try {
-      const response = await fetch(`/api/export?format=${format}`);
+      const params = new URLSearchParams({ format });
+      if (exportOnlyWithAscents) {
+        params.set("withAscentsOnly", "true");
+      }
+      const response = await fetch(`/api/export?${params.toString()}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -214,7 +219,16 @@ export default function StatsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold text-mountain-900">Statistics</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-col items-end gap-2">
+          <label className="flex items-center gap-2 text-sm text-mountain-700">
+            <input
+              type="checkbox"
+              checked={exportOnlyWithAscents}
+              onChange={(e) => setExportOnlyWithAscents(e.target.checked)}
+            />
+            Only tours with ascents
+          </label>
+          <div className="flex gap-2">
           <Button
             variant="ghost"
             size="sm"
@@ -259,6 +273,7 @@ export default function StatsPage() {
               className="hidden"
             />
           </label>
+          </div>
         </div>
       </div>
 
